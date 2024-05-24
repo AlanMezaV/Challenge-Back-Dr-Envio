@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User from '../models/user';
+import { SecurityService } from '../utils/security';
 
 // Obtener usuarios
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
@@ -31,11 +32,15 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
 
 // Crear un usuario
 export const createUser = async (req: Request, res: Response) => {
+    const securityService = new SecurityService();
+    const hashedPassword = await securityService.hash(req.body.password);
+
     const user = new User({
         name: req.body.name,
         email: req.body.email,
         direction: req.body.direction,
-        phone: req.body.phone
+        phone: req.body.phone,
+        password: hashedPassword
     });
     try {
         const newUser = await user.save();
@@ -49,7 +54,14 @@ export const createUser = async (req: Request, res: Response) => {
 // Actualizar un usuario por ID
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
+        const { password, ...rest } = req.body;
+
+        if (password) {
+            const securityService = new SecurityService();
+            rest.password = await securityService.hash(password);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, rest, {
             new: true
         });
         if (updatedUser) {
