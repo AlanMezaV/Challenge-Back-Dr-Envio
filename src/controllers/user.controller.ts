@@ -6,7 +6,7 @@ import { SecurityService } from '../utils/security';
 // Obtener usuarios
 export const getUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-        const user = await User.find();
+        const user = await User.find().select('-password');
         res.status(StatusCodes.OK).json(user);
     } catch (error) {
         console.error('Error getting users:', error);
@@ -18,7 +18,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
 export const getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const user = await User.findById(id);
+        const user = await User.findById(id).select('-password');
         if (user) {
             res.status(StatusCodes.OK).json(user);
         } else {
